@@ -23,7 +23,7 @@ actions :run
 
 #Installation attributes
 attribute :version, :kind_of => String
-attribute :download_url, :kind_of => String
+attribute :download_url, :kind_of => String, :default => "#{node['redisio']['mirror']}#{node['redisio']['base_name']}#{node['redisio']['version']}.#{node['redisio']['artifact_type']}"
 attribute :download_dir, :kind_of => String, :default => Chef::Config[:file_cache_path]
 attribute :artifact_type, :kind_of => String, :default => 'tar.gz'
 attribute :base_name, :kind_of => String, :default => 'redis-'
