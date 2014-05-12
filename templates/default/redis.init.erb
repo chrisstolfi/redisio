@@ -1,75 +1,94 @@
 #!/bin/sh
 #
-# Simple Redis init.d script conceived to work on Linux systems
-# as it does use of the /proc filesystem.
+# redis - this script starts and stops the redis-server daemon
 #
-# description: Redis is an in memory key-value store database
-#
-### BEGIN INIT INFO
-# Provides: redis<%= @port %>
-# Default-Start: 2 3 4 5
-# Default-Stop: 0 1 6
-# Description: redis<%= @port %> init script
-### END INIT INFO
+# chkconfig:   - 85 15 
+# description:  Redis is a persistent key-value database
+# processname: redis-server
+# config:      /etc/redis/redis.conf
+# config:      /etc/sysconfig/redis
+# pidfile:     "<%= @piddir %>/redis_<%=@name%>.pid
 
-REDISNAME=<%= @name %>
-REDISPORT=<%= @port %>
-<% case @platform %>
-<% when 'ubuntu','debian','fedora' %>
-EXEC="sudo -u <%= @user %> <%= File.join(@bin_path, 'redis-server') %> <%= @configdir %>/${REDISNAME}.conf"
-<% else %> 
-EXEC="runuser <%= @user %> -c \"<%= File.join(@bin_path, 'redis-server') %> <%= @configdir %>/${REDISNAME}.conf\""
-<% end %>
-CLIEXEC=<%= File.join(@bin_path, 'redis-cli') %>
+# Source function library.
+. /etc/rc.d/init.d/functions
 
-<% connection_string = String.new %>
-<% if @unixsocket.nil? %> 
-  <% connection_string << " -p #{@port}" %>
-  <% connection_string << " -h #{@address.respond_to?(:first) ? @address.first : @address }" if @address %>
-<% else %>
-  <% connection_string << " -s #{@unixsocket}" %>
-<% end %>
-<% connection_string  << " -a '#{@requirepass}'" unless @requirepass.nil? %>  
+# Source networking configuration.
+. /etc/sysconfig/network
 
-PIDFILE=<%= @piddir %>/redis_${REDISNAME}.pid
+# Check that networking is up.
+[ "$NETWORKING" = "no" ] && exit 0
 
-if [ ! -d <%= @piddir %> ]; then
-    mkdir -p <%= @piddir %>
-    chown <%= @user %>  <%= @piddir %>
-fi
+thisRedis="<%= @name %>"
+redis="<%= File.join(@bin_path, 'redis-server')%>"
+prog=$(basename $redis)
+user="<%= @user %>"
+pid="<%= @piddir %>/redis_<%=@name%>.pid"
 
-ulimit -n <%= @ulimit %>
+redis_conf_file="<%= @configdir %>/${thisRedis}.conf"
+
+[ -f /etc/sysconfig/redis ] && . /etc/sysconfig/redis
+
+lockfile=/var/lock/subsys/redis-$name
+
+start() {
+    [ -x $redis ] || exit 5
+    [ -f $REDIS_CONF_FILE ] || exit 6
+    echo -n $"Starting $prog: "
+    daemon --user $user $redis $redis_conf_file
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && touch $lockfile
+    return $retval
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    killproc -p $pid 
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && rm -f $lockfile
+    return $retval
+}
+
+restart() {
+    stop
+    start
+}
+
+force_reload() {
+    restart
+}
+
+rh_status() {
+    status $prog
+}
+
+rh_status_q() {
+    rh_status >/dev/null 2>&1
+}
 
 case "$1" in
     start)
-        if [ -f $PIDFILE ]
-        then
-                echo "$PIDFILE exists, process is already running or crashed"
-        else
-                echo "Starting Redis server..."
-                eval $EXEC
-        fi
+        rh_status_q && exit 0
+        $1
         ;;
     stop)
-        if [ ! -f $PIDFILE ]
-        then
-                echo "$PIDFILE does not exist, process is not running"
-        else
-                PID=$(cat $PIDFILE)
-                echo "Stopping ..."
-
-                <%= "$CLIEXEC #{connection_string} save" if @shutdown_save %>                 
-                $CLIEXEC <%= connection_string %> shutdown
-
-                while [ -x /proc/${PID} ]
-                do
-                    echo "Waiting for Redis to shutdown ..."
-                    sleep 1
-                done
-                echo "Redis stopped"
-        fi
+        rh_status_q || exit 0
+        $1
         ;;
+    restart|configtest)
+        $1
+        ;;
+    force-reload)
+        force_reload
+        ;;
+    status)
+        rh_status
+        ;;
+    condrestart|try-restart)
+        rh_status_q || exit 0
+	    ;;
     *)
-        echo "Please use start or stop as first argument"
-        ;;
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart|force-reload}"
+        exit 2
 esac
