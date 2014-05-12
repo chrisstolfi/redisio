@@ -1,6 +1,13 @@
 redisio CHANGE LOG
 ===
 
+1.8.0 - Dev
+---
+  - Bumps default version of redis to 2.8.9
+  - Don't touch user if exists
+  - Give default to download url
+  - Proper redhat/cent init script
+
 1.7.1 - Released 2/10/2014
 ---
   - Bumps default version of redis to 2.6.17

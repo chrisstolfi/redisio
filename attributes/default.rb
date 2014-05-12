@@ -38,7 +38,7 @@ default['redisio']['safe_install'] = true
 default['redisio']['mirror'] = "http://download.redis.io/releases/"
 default['redisio']['base_name'] = 'redis-'
 default['redisio']['artifact_type'] = 'tar.gz'
-default['redisio']['version'] = '2.6.17'
+default['redisio']['version'] = '2.8.9'
 default['redisio']['base_piddir'] = '/var/run/redis'
 
 #Custom installation directory
