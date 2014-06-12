@@ -118,12 +118,19 @@ def configure
         recursive true
         action :create
       end
+      #Create the base_piddir. This is to cover the case of unfavorable umask.
+      directory base_piddir do
+        owner "root"
+        group "root"
+        mode '0755'
+        recursive true
+        action :create
+      end
       #Create the pid file directory
       directory piddir do
         owner current['user']
         group current['group']
         mode '0755'
-        recursive true
         action :create
       end
       #Create the log directory if syslog is not being used
