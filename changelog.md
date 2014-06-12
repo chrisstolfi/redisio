@@ -1,6 +1,11 @@
 redisio CHANGE LOG
 ===
 
+1.8.1 - Dev
+---
+  - Remove node.set in install. I didn't like it...and I don't really get why it's there.
+  - Added mkdir on the base_piddir in addition to piddir. This is for AOL's crappy umask setting. Only works if parent of base_piddir already exists and is readable by the running user
+
 1.8.0 - Dev
 ---
   - Bumps default version of redis to 2.8.9
