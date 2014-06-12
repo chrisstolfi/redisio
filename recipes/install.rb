@@ -24,6 +24,7 @@ location = "#{redis['mirror']}/#{redis['base_name']}#{redis['version']}.#{redis[
 
 redis_instances = redis['servers']
 if redis_instances.nil?
+  Chef::Application.fatal!("Define a server man.", 66)
   redis_instances = [{'port' => '6379'}]
 end
 
@@ -64,6 +65,3 @@ redis_instances.each do |current_server|
   end
 
 end
-
-node.set['redisio']['servers'] = redis_instances 
-
